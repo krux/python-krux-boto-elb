@@ -40,6 +40,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
+            'krux-elb-test = krux_elb.cli:main',
         ],
     },
     test_suite='test',
