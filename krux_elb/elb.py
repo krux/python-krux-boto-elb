@@ -120,7 +120,7 @@ class ELB(object):
 
         return self._conn
 
-    def find_load_balancers(self, instance):
+    def find_load_balancers(self, instance_id):
         """
         Returns a list of ELB that the given instance is behind
         """
@@ -128,36 +128,36 @@ class ELB(object):
 
         load_balancers = [
             lb for lb in elb.get_all_load_balancers()
-            if instance.id in [i.id for i in lb.instances]
+            if instance_id in [i.id for i in lb.instances]
         ]
 
         self._logger.info('Found following load balancers: %s', load_balancers)
 
         if len(load_balancers) > 1:
-            self._logger.warning('The given instance is under multiple load balancers: %s', load_balancers)
+            self._logger.warning('The instance %s is under multiple load balancers: %s', instance_id, load_balancers)
 
         return load_balancers
 
-    def remove_instance(self, instance, load_balancer_name):
+    def remove_instance(self, instance_id, load_balancer_name):
         """
         Removes the given instance from the ELB with the given name.
         """
         elb = self._get_connection()
         try:
-            elb.deregister_instances(load_balancer_name, [instance.id])
+            elb.deregister_instances(load_balancer_name, [instance_id])
         except boto.exception.BotoServerError:
             trace = sys.exc_info()[2]
             raise ELBInstanceMismatchError(), None, trace
-        self._logger.info('Removed instance %s from load balancer %s', instance.tags.get('Name'), load_balancer_name)
+        self._logger.info('Removed instance %s from load balancer %s', instance_id, load_balancer_name)
 
-    def add_instance(self, instance, load_balancer_name):
+    def add_instance(self, instance_id, load_balancer_name):
         """
         Adds the given instance to the ELB with the given name.
         """
         elb = self._get_connection()
         try:
-            elb.register_instances(load_balancer_name, [instance.id])
+            elb.register_instances(load_balancer_name, [instance_id])
         except boto.exception.BotoServerError:
             trace = sys.exc_info()[2]
             raise ELBInstanceMismatchError(), None, trace
-        self._logger.info('Added instance %s to load balancer %s', instance.tags.get('Name'), load_balancer_name)
+        self._logger.info('Added instance %s to load balancer %s', instance_id, load_balancer_name)

@@ -19,15 +19,6 @@ import krux_boto.cli
 from krux_elb.elb import add_elb_cli_arguments, get_elb, NAME
 
 
-class MockInstance(object):
-    """
-    Instance existing only as a demonstration purpose. Do not use outside of this file.
-    """
-
-    def __init__(self, instance_id):
-        self.id = instance_id
-
-
 class Application(krux_boto.cli.Application):
 
     def __init__(self, name=NAME):
@@ -46,7 +37,7 @@ class Application(krux_boto.cli.Application):
         print self.elb.find_load_balancers(
             # console-b001.krxd.net
             # Arbitrary chosen as a test instance
-            instance=MockInstance('i-16137da5')
+            instance_id='i-16137da5'
         )
 
 
