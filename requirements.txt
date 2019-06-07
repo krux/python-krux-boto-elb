@@ -1,8 +1,5 @@
-# Krux' python repo
---extra-index-url https://staticfiles.krxd.net/foss/pypi/
-
 # Krux-boto library which this is built on
-krux-boto==1.0.1
+krux-boto==1.5.5
 
 # Transitive libraries
 # This is needed so there are no version conflicts when
@@ -10,23 +7,22 @@ krux-boto==1.0.1
 # and another one does.
 
 # From krux-boto
-krux-stdlib==2.1.1
-boto==2.39.0
-boto3==1.2.3
+krux-stdlib==3.1.0
+boto==2.49.0
+boto3==1.9.163
 pystache==0.5.4
-Sphinx==1.2b1
-Jinja2==2.6
-Pygments==1.6
-docutils==0.10
-kruxstatsd==0.2.2
-statsd==2.0.3
-argparse==1.2.1
-GitPython==0.3.2.RC1
-simplejson==3.3.0
-tornado==3.0.1
-lockfile==0.9.1
-subprocess32==3.2.7
-async==0.6.1
+Sphinx==2.1.0
+Jinja2==2.10.1
+Pygments==2.4.2
+docutils==0.14
+kruxstatsd==0.3.6
+statsd==3.3.0
+argparse==1.4.0
+GitPython==2.1.11
+simplejson==3.16.0
+tornado==6.0.2
+lockfile==0.12.2
+subprocess32==3.5.4
 fudge==1.0.3
-gitdb==0.5.4
-smmap==0.8.2
+gitdb==0.6.4
+smmap==0.9.0
