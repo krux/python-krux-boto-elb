@@ -80,7 +80,7 @@ def add_elb_cli_arguments(parser, include_boto_arguments=True):
     group = get_group(parser, NAME)
 
 
-class ELBInstanceMismatchError(StandardError):
+class ELBInstanceMismatchError(Exception):
     pass
 
 
@@ -148,7 +148,7 @@ class ELB(object):
             elb.deregister_instances(load_balancer_name, [instance_id])
         except boto.exception.BotoServerError:
             trace = sys.exc_info()[2]
-            raise ELBInstanceMismatchError(), None, trace
+            raise ELBInstanceMismatchError().with_traceback(trace)
         self._logger.info('Removed instance %s from load balancer %s', instance_id, load_balancer_name)
 
     def add_instance(self, instance_id, load_balancer_name):
@@ -160,5 +160,5 @@ class ELB(object):
             elb.register_instances(load_balancer_name, [instance_id])
         except boto.exception.BotoServerError:
             trace = sys.exc_info()[2]
-            raise ELBInstanceMismatchError(), None, trace
+            raise ELBInstanceMismatchError().with_traceback(trace)
         self._logger.info('Added instance %s to load balancer %s', instance_id, load_balancer_name)
