@@ -21,6 +21,7 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+.vendor/
 
 # Installer logs
 pip-log.txt
@@ -43,6 +44,7 @@ cover/
 .mr.developer.cfg
 .project
 .pydevproject
+.idea/
 
 # Rope
 .ropeproject
