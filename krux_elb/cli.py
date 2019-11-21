@@ -7,9 +7,6 @@
 # Standard libraries
 #
 
-from __future__ import absolute_import
-import os
-
 #
 # Internal libraries
 #
@@ -34,11 +31,11 @@ class Application(krux_boto.cli.Application):
         add_elb_cli_arguments(parser, include_boto_arguments=False)
 
     def run(self):
-        print self.elb.find_load_balancers(
+        print(self.elb.find_load_balancers(
             # console-b001.krxd.net
             # Arbitrary chosen as a test instance
             instance_id='i-16137da5'
-        )
+        ))
 
 
 def main():

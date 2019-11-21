@@ -7,14 +7,13 @@
 # Standard libraries
 #
 
-from __future__ import absolute_import
 import sys
 
 #
 # Third party libraries
 #
 
-from krux_boto import Boto, add_boto_cli_arguments
+from krux_boto.boto import add_boto_cli_arguments, get_boto
 from krux.logging import get_logger
 from krux.stats import get_stats
 from krux.cli import get_parser, get_group
@@ -50,11 +49,7 @@ def get_elb(args=None, logger=None, stats=None):
     if not stats:
         stats = get_stats(prefix=NAME)
 
-    boto = Boto(
-        log_level=args.boto_log_level,
-        access_key=args.boto_access_key,
-        secret_key=args.boto_secret_key,
-        region=args.boto_region,
+    boto = get_boto(
         logger=logger,
         stats=stats,
     )
@@ -80,7 +75,7 @@ def add_elb_cli_arguments(parser, include_boto_arguments=True):
     group = get_group(parser, NAME)
 
 
-class ELBInstanceMismatchError(StandardError):
+class ELBInstanceMismatchError(Exception):
     pass
 
 
@@ -103,7 +98,7 @@ class ELB(object):
 
         # Throw exception when Boto2 is not used
         # TODO: Start using Boto3 and reverse this check
-        if not isinstance(boto, Boto):
+        if not isinstance(boto, get_boto()):
             raise TypeError('krux_elb.elb.ELB only supports krux_boto.boto.Boto')
 
         self.boto = boto
@@ -148,7 +143,7 @@ class ELB(object):
             elb.deregister_instances(load_balancer_name, [instance_id])
         except boto.exception.BotoServerError:
             trace = sys.exc_info()[2]
-            raise ELBInstanceMismatchError(), None, trace
+            raise ELBInstanceMismatchError().with_traceback(trace)
         self._logger.info('Removed instance %s from load balancer %s', instance_id, load_balancer_name)
 
     def add_instance(self, instance_id, load_balancer_name):
@@ -160,5 +155,5 @@ class ELB(object):
             elb.register_instances(load_balancer_name, [instance_id])
         except boto.exception.BotoServerError:
             trace = sys.exc_info()[2]
-            raise ELBInstanceMismatchError(), None, trace
+            raise ELBInstanceMismatchError().with_traceback(trace)
         self._logger.info('Added instance %s to load balancer %s', instance_id, load_balancer_name)
