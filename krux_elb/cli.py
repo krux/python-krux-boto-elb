@@ -1,40 +1,31 @@
 # -*- coding: utf-8 -*-
 #
-# © 2016 Krux Digital, Inc.
+# © 2019 Salesforce.com
 #
 
-#
-# Standard libraries
-#
-
-#
-# Internal libraries
-#
+from __future__ import print_function
 
 from krux.cli import get_group
 import krux_boto.cli
-from krux_elb.elb import add_elb_cli_arguments, get_elb, NAME
+
+from . import elb
 
 
 class Application(krux_boto.cli.Application):
 
-    def __init__(self, name=NAME):
+    def __init__(self, name=elb.NAME):
         # Call to the superclass to bootstrap.
         super(Application, self).__init__(name=name)
-
-        self.elb = get_elb(self.args, self.logger, self.stats)
+        self.elb = elb.get_elb(self.args, self.logger, self.stats)
 
     def add_cli_arguments(self, parser):
-        # Call to the superclass
         super(Application, self).add_cli_arguments(parser)
-
-        add_elb_cli_arguments(parser, include_boto_arguments=False)
+        elb.add_elb_cli_arguments(parser, include_boto_arguments=False)
 
     def run(self):
         print(self.elb.find_load_balancers(
-            # console-b001.krxd.net
-            # Arbitrary chosen as a test instance
-            instance_id='i-16137da5'
+            # Arbitrary chosen as a test instance: console-c001.krxd.net
+            instance_id='i-030b394f463cc079b'
         ))
 
 

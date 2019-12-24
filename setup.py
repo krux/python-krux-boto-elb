@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# © 2016 Krux Digital, Inc.
+# © 2019 Salesforce.com
 #
 
 """
@@ -12,23 +12,21 @@ Package setup for krux-elb
 #
 from setuptools import setup, find_packages
 
-# We use the version to construct the DOWNLOAD_URL.
-VERSION = '0.1.0'
+from krux_elb import __version__
 
 # URL to the repository on Github.
 REPO_URL = 'https://github.com/krux/python-krux-boto-elb'
 # Github will generate a tarball as long as you tag your releases, so don't
 # forget to tag!
-DOWNLOAD_URL = ''.join((REPO_URL, '/tarball/release/', VERSION))
+DOWNLOAD_URL = ''.join((REPO_URL, '/tarball/release/', __version__))
 
 
 setup(
     name='krux-elb',
-    version=VERSION,
+    version=__version__,
     author='Peter Han',
-    author_email='phan@krux.com',
-    maintainer='Peter Han',
-    maintainer_email='phan@krux.com',
+    maintainer='David Llopis',
+    maintainer_email='dllopis@salesforce.com',
     description='Library for interacting with AWS ELB built on krux-boto',
     url=REPO_URL,
     download_url=DOWNLOAD_URL,
@@ -37,10 +35,4 @@ setup(
     install_requires=[
         'krux-boto',
     ],
-    entry_points={
-        'console_scripts': [
-            'krux-elb-test = krux_elb.cli:main',
-        ],
-    },
-    test_suite='test',
 )

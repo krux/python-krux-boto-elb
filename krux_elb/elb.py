@@ -1,25 +1,15 @@
 # -*- coding: utf-8 -*-
 #
-# © 2015 Krux Digital, Inc.
+# © 2019 Salesforce.com
 #
 
-#
-# Standard libraries
-#
+from typing import List
 
-import sys
-
-#
-# Third party libraries
-#
-
-from krux_boto.boto import add_boto_cli_arguments, get_boto
+from krux_boto.boto import add_boto_cli_arguments, Boto3
 from krux.logging import get_logger
 from krux.stats import get_stats
 from krux.cli import get_parser, get_group
-import boto.ec2
-import boto.ec2.elb
-
+from krux.object import Object
 
 NAME = 'krux-elb'
 
@@ -42,14 +32,17 @@ def get_elb(args=None, logger=None, stats=None):
         parser = get_parser()
         add_elb_cli_arguments(parser)
         args = parser.parse_args()
-
     if not logger:
         logger = get_logger(name=NAME)
 
     if not stats:
         stats = get_stats(prefix=NAME)
 
-    boto = get_boto(
+    boto = Boto3(
+        log_level=args.boto_log_level,
+        access_key=args.boto_access_key,
+        secret_key=args.boto_secret_key,
+        region=args.boto_region,
         logger=logger,
         stats=stats,
     )
@@ -75,11 +68,7 @@ def add_elb_cli_arguments(parser, include_boto_arguments=True):
     group = get_group(parser, NAME)
 
 
-class ELBInstanceMismatchError(Exception):
-    pass
-
-
-class ELB(object):
+class ELB(Object):
     """
     A manager to handle all ELB related functions.
     Each instance is locked to a connection to a designated region (self.boto.cli_region).
@@ -91,40 +80,44 @@ class ELB(object):
         logger=None,
         stats=None,
     ):
+        super(ELB, self).__init__(name=NAME, logger=logger, stats=stats)
+
+        if not isinstance(boto, Boto3):
+            raise TypeError('krux_elb.elb.ELB only supports krux_boto.boto.Boto3')
+
+        self.boto = boto
+
         # Private variables, not to be used outside this module
         self._name = NAME
         self._logger = logger or get_logger(self._name)
         self._stats = stats or get_stats(prefix=self._name)
 
-        # Throw exception when Boto2 is not used
-        # TODO: Start using Boto3 and reverse this check
-        if not isinstance(boto, get_boto()):
-            raise TypeError('krux_elb.elb.ELB only supports krux_boto.boto.Boto')
-
-        self.boto = boto
-
         # Set up default cache
-        self._conn = None
+        self._client = None
 
-    def _get_connection(self):
+    def _get_client(self):
         """
-        Returns a connection to the designated region (self.boto.cli_region).
-        The connection is established on the first call for this instance (lazy) and cached.
+        Returns a client to the designated region (self.boto.cli_region).
+        .. note::
+            The connection is established on the first call for this instance (lazy) and cached.
+        :return: Client to the designated region
+        :rtype: boto3.client
         """
-        if self._conn is None:
-            self._conn = self.boto.ec2.elb.connect_to_region(self.boto.cli_region)
+        if self._client is None:
+            self._client = self.boto.client(service_name='elb', region_name=self.boto.cli_region)
 
-        return self._conn
+        return self._client
 
-    def find_load_balancers(self, instance_id):
+    def find_load_balancers(self, instance_id):  # type: (str) -> List[str]
         """
-        Returns a list of ELB that the given instance is behind
+        Returns a list of Load Balancer names that the given instance is behind
         """
-        elb = self._get_connection()
+        elb = self._get_client()
+        load_balancer_descriptions = elb.describe_load_balancers()['LoadBalancerDescriptions']
 
         load_balancers = [
-            lb for lb in elb.get_all_load_balancers()
-            if instance_id in [i.id for i in lb.instances]
+            lb['LoadBalancerName'] for lb in load_balancer_descriptions
+            if instance_id in [instances['InstanceId'] for instances in lb['Instances']]
         ]
 
         self._logger.info('Found following load balancers: %s', load_balancers)
@@ -134,26 +127,24 @@ class ELB(object):
 
         return load_balancers
 
-    def remove_instance(self, instance_id, load_balancer_name):
+    def remove_instance(self, instance_id, load_balancer_name):  # type: (str, str) -> None
         """
         Removes the given instance from the ELB with the given name.
         """
-        elb = self._get_connection()
-        try:
-            elb.deregister_instances(load_balancer_name, [instance_id])
-        except boto.exception.BotoServerError:
-            trace = sys.exc_info()[2]
-            raise ELBInstanceMismatchError().with_traceback(trace)
+        elb = self._get_client()
+        elb.deregister_instances_from_load_balancer(
+            LoadBalancerName=load_balancer_name,
+            Instances=[{'InstanceId': instance_id}]
+        )
         self._logger.info('Removed instance %s from load balancer %s', instance_id, load_balancer_name)
 
-    def add_instance(self, instance_id, load_balancer_name):
+    def add_instance(self, instance_id, load_balancer_name):  # type: (str, str) -> None
         """
         Adds the given instance to the ELB with the given name.
         """
-        elb = self._get_connection()
-        try:
-            elb.register_instances(load_balancer_name, [instance_id])
-        except boto.exception.BotoServerError:
-            trace = sys.exc_info()[2]
-            raise ELBInstanceMismatchError().with_traceback(trace)
+        elb = self._get_client()
+        elb.register_instances_with_load_balancer(
+            LoadBalancerName=load_balancer_name,
+            Instances=[{'InstanceId': instance_id}]
+        )
         self._logger.info('Added instance %s to load balancer %s', instance_id, load_balancer_name)
