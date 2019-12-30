@@ -1,10 +1,6 @@
 # krux_elb
 
-`krux_elb` is a library that provides wrapper functions for common S3 usage. It uses `krux_boto` to connect to AWS ELB.
-
-## Warning
-
-In the current version, `krux_elb.elb.ELB` is only compatible with `krux_boto.boto.Boto` object. Passing other objects, such as `krux_boto.boto.Boto3`, will cause an exception.
+`krux_elb` is a library that provides wrapper functions for common ELB usage. It uses `krux_boto` to connect to AWS ELB.
 
 ## Application quick start
 
