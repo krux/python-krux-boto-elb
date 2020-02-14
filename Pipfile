@@ -16,7 +16,7 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-krux-boto = {version = "~=1.7.0",index = "kruxfoss"}
+krux-boto = {version = "*",index = "kruxfoss"}
 
 [requires]
 python_version = "3.6"
